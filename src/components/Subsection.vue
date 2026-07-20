@@ -15,6 +15,9 @@
       >{{title}}</h1>
       <div
           class="v-subsection__content__slot"
+          :class="{
+            'is-stacked': stackSlides,
+          }"
           ref="scrollContent"
           @scroll="onScrollInSlideContainer"
       >
@@ -77,6 +80,12 @@ export default defineComponent({
     },
 
     titleVariant: {
+      type: Boolean,
+      require: false,
+      default: false,
+    },
+
+    stackSlides: {
       type: Boolean,
       require: false,
       default: false,
@@ -179,6 +188,14 @@ export default defineComponent({
     flex-shrink: 0;
     scroll-snap-align: start;
   }
+}
+
+// `position: sticky` ne fonctionne pas à l'intérieur d'un conteneur de scroll :
+// la variante empilée doit donc abandonner le défilement horizontal, pas seulement le masquer.
+.v-subsection__content__slot.is-stacked {
+  display: block;
+  overflow-x: visible;
+  scroll-snap-type: none;
 }
 
 .v-subsection__ui-box {

@@ -8,12 +8,12 @@
       <img class="v-image-gallery__ui v-image-gallery__ui--left"
            src="/img/NC-ui-arrow_2-left.svg"
            alt="ui arrow left navigation"
-           @click="slideInGallery('toLeft')"
+           @click="onUserNavigate('toLeft')"
       />
       <img class="v-image-gallery__ui v-image-gallery__ui--right"
            src="/img/NC-ui-arrow_2-right.svg"
            alt="ui arrow right navigation"
-           @click="slideInGallery('toRight')"
+           @click="onUserNavigate('toRight')"
       />
 
       <div
@@ -21,17 +21,22 @@
           ref="imageGallery"
           @scroll="onScrollInGallery"
       >
-        <img v-for="imageData of arrayOfImgData" :src="imageData.url" alt="">
+        <img v-for="imageData of arrayOfImgData" :key="imageData.url" :src="imageData.url" alt="">
       </div>
     </div>
 
     <div
         class="v-image-gallery__counter"
     >
-      <template v-for="imageDataIndex in Object.keys(arrayOfImgData).length" >
-        <img  :alt="imageDataIndex" v-if="imageDataIndex-1 === currentIndex" src="../assets/ui/counter--active.svg">
-        <img  :alt="imageDataIndex" v-else                                 src="../assets/ui/counter--unactive.svg">
-      </template>
+      <button
+          v-for="slideNumber in slideCount"
+          :key="slideNumber"
+          type="button"
+          class="v-image-gallery__counter__item"
+          :class="{'is-current': slideNumber - 1 === currentIndex}"
+          :aria-label="`Afficher l'image ${slideNumber} sur ${slideCount}`"
+          @click="onUserGoTo(slideNumber - 1)"
+      >{{ slideNumber }}</button>
     </div>
   </div>
 </template>
@@ -39,6 +44,10 @@
 <script lang="ts">
 import {defineComponent, PropType} from 'vue';
 import {IApiImageData} from "@/global/api"
+
+// Silence à observer après le dernier événement de scroll pour considérer qu'un
+// défilement programmatique est terminé — le navigateur n'émet aucun événement de fin.
+const PROGRAMMATIC_SCROLL_END_MS = 200
 
 export default defineComponent({
   name: 'ImageGallery',
@@ -49,6 +58,9 @@ export default defineComponent({
   data() {
     return {
       currentIndex: 0,
+      autoplayTimer: null as number | null,
+      settleTimer: null as number | null,
+      isProgrammaticScroll: false,
     }
   },
 
@@ -57,43 +69,96 @@ export default defineComponent({
       required: true,
       type: Object as PropType<IApiImageData[]>,
     },
+
+    autoplayInterval: {
+      required: false,
+      type: Number,
+      default: 5000,
+    },
+  },
+
+  computed: {
+    slideCount(): number {
+      return Object.keys(this.arrayOfImgData).length
+    },
+  },
+
+  mounted() {
+    this.startAutoplay()
+  },
+
+  unmounted() {
+    this.stopAutoplay()
+    if (this.settleTimer !== null) window.clearTimeout(this.settleTimer)
   },
 
   methods: {
 
-    onScrollInGallery(e: MouseEvent) {
+    startAutoplay() {
+      if (this.slideCount < 2) return
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+      this.autoplayTimer = window.setInterval(() => {
+        this.goToIndex((this.currentIndex + 1) % this.slideCount)
+      }, this.autoplayInterval)
+    },
+
+    stopAutoplay() {
+      if (this.autoplayTimer === null) return
+      window.clearInterval(this.autoplayTimer)
+      this.autoplayTimer = null
+    },
+
+    onUserNavigate(direction: 'toLeft' | 'toRight') {
+      this.stopAutoplay()
+      this.slideInGallery(direction)
+    },
+
+    onUserGoTo(index: number) {
+      this.stopAutoplay()
+      this.goToIndex(index)
+    },
+
+    onScrollInGallery() {
       if( !(this.$refs.imageGallery instanceof HTMLElement) ) return
 
       const scrollLeft        = this.$refs.imageGallery.scrollLeft
       const imageGalleryWidth = this.$refs.imageGallery.getBoundingClientRect().width
 
       this.currentIndex = Math.floor( (scrollLeft + imageGalleryWidth / 2 ) / imageGalleryWidth )
+
+      // Un scroll que nous n'avons pas déclenché vient forcément d'un glissement : l'utilisateur a pris la main.
+      if (!this.isProgrammaticScroll) {
+        this.stopAutoplay()
+        return
+      }
+
+      // Tant que le défilement programmatique émet des événements, on repousse sa clôture.
+      this.scheduleProgrammaticScrollEnd()
+    },
+
+    scheduleProgrammaticScrollEnd() {
+      if (this.settleTimer !== null) window.clearTimeout(this.settleTimer)
+      this.settleTimer = window.setTimeout(() => {
+        this.isProgrammaticScroll = false
+      }, PROGRAMMATIC_SCROLL_END_MS)
+    },
+
+    goToIndex(index: number) {
+      if( !(this.$refs.imageGallery instanceof HTMLElement) ) return
+      if (index < 0 || index >= this.slideCount) return
+
+      this.isProgrammaticScroll = true
+      this.scheduleProgrammaticScrollEnd()
+
+      this.$refs.imageGallery.scrollTo({
+        left: index * this.$refs.imageGallery.getBoundingClientRect().width,
+        behavior: 'smooth',
+      })
     },
 
     slideInGallery(direction: 'toLeft' | 'toRight') {
-      if( !(this.$refs.imageGallery instanceof HTMLElement) ) return
-
-      let index = this.currentIndex
-
-      switch (direction) {
-        case "toLeft":
-          index--
-          if (index < 0) break
-          this.$refs.imageGallery.scrollTo({
-            left: index * this.$refs.imageGallery.getBoundingClientRect().width,
-            behavior: 'smooth',
-          })
-          break
-        case "toRight":
-          index++
-          if (index >= Object.keys( this.arrayOfImgData ).length) break
-          this.$refs.imageGallery.scrollTo({
-            left: index * this.$refs.imageGallery.getBoundingClientRect().width,
-            behavior: 'smooth',
-          })
-          console.log('right')
-
-      }
+      this.goToIndex(direction === 'toLeft' ? this.currentIndex - 1 : this.currentIndex + 1)
     },
 
   },
@@ -150,12 +215,29 @@ export default defineComponent({
   width: 100%;
   padding: var(--gutter--half);
   box-sizing: border-box;
+}
 
-  > img {
-    display: block;
-    user-select: none;
-    cursor: pointer;
-    padding: calc( var(--gutter--half) / 2 );
+.v-image-gallery__counter__item {
+  display: block;
+  background: none;
+  border: none;
+  border-radius: 0;
+  min-width: 2em;
+  padding: calc( var(--gutter--half) / 2 );
+  font-family: inherit;
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  color: var(--color--dark);
+  opacity: .35;
+  transition: opacity .3s ease, color .3s ease;
+
+  &:hover {
+    opacity: .7;
+  }
+
+  &.is-current {
+    opacity: 1;
+    color: var(--color--main);
   }
 }
 

@@ -18,6 +18,7 @@
     <section-bio
         v-if="('biographie' in store.state.homeData)"
         id="v-home__bio"
+        layout="sticky"
         :dataSlide="store.state.homeData.biographie"
     />
 
