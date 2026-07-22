@@ -3,6 +3,7 @@
 
   --color--main:  #C0985B;
   --color--dark:  #111518;
+  --color--black: #000000;
   --color--grey:  #EBEBEB;
   --color--light: #FFFFFF;
   --color-danger: red;
@@ -27,7 +28,9 @@
   --ui-border-width: 1px;
   --ui-border-color: var(--color--main);
 
+  // La nouvelle maquette réduit la nav à une seule ligne fine, y compris en desktop
+  // (auparavant deux lignes empilées, d'où une réserve de hauteur bien plus grande ici).
   @media all and (min-width: 950px) {
-    --navigation-height: 8.25rem;
+    --navigation-height: 4.5rem;
   }
 }

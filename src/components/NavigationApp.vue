@@ -5,81 +5,64 @@
   >
 
     <div
-        class="v-navigation-app__top lo-g-row"
+        class="v-navigation-app__top"
     >
 
-      <div>
-        <div
-            class="v-navigation-app__top__date"
-        >
-          {{date}}
-        </div>
-        <div
-            class="v-navigation-app__top__date-mobile"
-        >
-          {{dateMobile}}
-        </div>
-      </div>
+      <router-link
+          class="v-navigation-app__top__brand"
+          :to="{path: '/', hash: '#v-home__main'}"
+      >level one</router-link>
 
-      <div>
-        <router-link
-            class="v-navigation-app__top__logo-link"
-            :to="{path: '/', hash: '#v-home__main'}"
-        >
-          <img
-              class="v-navigation-app__top__logo"
-              src="/img/NC_logo.svg" alt="logo">
-        </router-link>
-      </div>
-
-      <div>
-        <div
-            @click="toggleMenu"
-            class="v-navigation-app__top__toggle-menu"
-        >
-          <div>
-            <svg
-                v-if="store.state.menuOpen"
-                version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
-                xmlns:xlink="http://www.w3.org/1999/xlink"
-                x="0px"
-                y="0px"
-                viewBox="0 0 213.8 213.8"
-                style="enable-background:new 0 0 213.8 213.8;"
-                xml:space="preserve"
-            >
-              <polygon
-                  points="213.8,23.8 190.1,0 106.9,83.2 23.8,0 0,23.8 83.2,106.9 0,190.1 23.8,213.8 106.9,130.7 190.1,213.8 213.8,190.1 130.7,106.9 "/>
-            </svg>
-            <svg
-                v-else
-                version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
-                xmlns:xlink="http://www.w3.org/1999/xlink"
-                x="0px"
-                y="0px"
-                viewBox="0 0 268.8 212.8"
-                style="enable-background:new 0 0 268.8 212.8;"
-                xml:space="preserve"
-            >
-              <g>
-                <path d="M0,0v33.6h268.8V0H0z M0,89.6v33.6h268.8V89.6H0z M0,179.2v33.6h268.8v-33.6H0z"/>
-              </g>
-            </svg>
-          </div>
+      <div
+          @click="toggleMenu"
+          class="v-navigation-app__top__toggle-menu"
+      >
+        <div>
+          <svg
+              v-if="store.state.menuOpen"
+              version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
+              xmlns:xlink="http://www.w3.org/1999/xlink"
+              x="0px"
+              y="0px"
+              viewBox="0 0 213.8 213.8"
+              style="enable-background:new 0 0 213.8 213.8;"
+              xml:space="preserve"
+          >
+            <polygon
+                points="213.8,23.8 190.1,0 106.9,83.2 23.8,0 0,23.8 83.2,106.9 0,190.1 23.8,213.8 106.9,130.7 190.1,213.8 213.8,190.1 130.7,106.9 "/>
+          </svg>
+          <svg
+              v-else
+              version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
+              xmlns:xlink="http://www.w3.org/1999/xlink"
+              x="0px"
+              y="0px"
+              viewBox="0 0 268.8 212.8"
+              style="enable-background:new 0 0 268.8 212.8;"
+              xml:space="preserve"
+          >
+            <g>
+              <path d="M0,0v33.6h268.8V0H0z M0,89.6v33.6h268.8V89.6H0z M0,179.2v33.6h268.8v-33.6H0z"/>
+            </g>
+          </svg>
         </div>
       </div>
 
     </div>
 
     <div
-        class="v-navigation-app__bottom lo-g-box lo-g-box--centred lo-g-row"
+        class="v-navigation-app__bottom"
     >
-      <router-link class="lo-g-gutter--half" :to="{path: '/', hash: '#v-home__main'}">Level One</router-link>
-      <router-link class="lo-g-gutter--half" :to="{path: '/', hash: '#v-home__specification'}">Spécifications</router-link>
-      <router-link class="lo-g-gutter--half" :to="{path: '/', hash: '#v-home__bio'}">Biographie</router-link>
-      <router-link class="lo-g-gutter--half" :to="{path: '/', hash: '#v-home__talents'}">Talents</router-link>
-      <router-link class="lo-g-gutter--half" to="/pre-order">Pré-commande</router-link>
-      <router-link class="lo-g-gutter--half" to="/certification">Certificats</router-link>
+      <div class="v-navigation-app__bottom__group">
+        <router-link :to="{path: '/', hash: '#v-home__main'}">level one</router-link>
+        <router-link :to="{path: '/', hash: '#v-home__specification'}">spécifications</router-link>
+        <router-link :to="{path: '/', hash: '#v-home__bio'}">a propos</router-link>
+      </div>
+
+      <div class="v-navigation-app__bottom__group">
+        <router-link to="/certification">certificats</router-link>
+        <router-link class="v-navigation-app__bottom__cta" to="/pre-order">précommander</router-link>
+      </div>
     </div>
 
   </nav>
@@ -87,7 +70,6 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import {LocationAsPath} from "vue-router"
 import {useStore} from "vuex"
 import {key} from "@/store"
 
@@ -98,25 +80,6 @@ export default defineComponent({
 
   data() {
     return {
-      date: (() => {
-        const date = new Date()
-        return date.toLocaleDateString("fr-FR", {
-          weekday:  "long",
-          day: "numeric",
-          month:    "long",
-          year:   "numeric",
-        })
-      })(),
-
-      dateMobile: (() => {
-        const date = new Date()
-        const day   = date.toLocaleDateString("fr-FR", {day:    "2-digit",})
-        const month = date.toLocaleDateString("fr-FR", {month:  "2-digit",})
-        const year  = date.toLocaleDateString("fr-FR", {year:   "2-digit",})
-
-        return `${day}.${month}.${year}`
-      })(),
-
       hide: false,
 
       store: useStore(key)
@@ -147,29 +110,41 @@ export default defineComponent({
 .v-navigation-app {
   position: relative;
   width: 100%;
-  height: 100%;
-  background-color: var(--color--light);
+  // Hauteur épinglée sur la même variable que la réserve de `.v-app` : plus jamais
+  // d'écart entre la nav et ce qui suit (le fond noir de la nav rejoint directement
+  // celui de la photo hero, sans bande blanche entre les deux).
+  height: var(--navigation-height);
+  box-sizing: border-box;
+  background-color: var(--color--black);
+  color: var(--color--light);
+
+  .menu-open & {
+    height: 100%;
+  }
 }
 
 .v-navigation-app__top {
   position: relative;
-  border-bottom: solid 1px var(--color--main);
-  background: var(--color--light);
   z-index: 10;
+  height: 100%;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
   justify-content: space-between;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
 
   @media all and (min-width: 950px) {
-    flex-direction: row;
+    display: none;
   }
+}
 
-  > div {
-    width: 33.33333%;
-    padding-left: var(--gutter--half);
-    padding-right: var(--gutter--half);
-  }
+.v-navigation-app__top__brand {
+  font-family: MB_Picture_House_One_Light, sans-serif;
+  font-size: calc( var(--font-size) * 1.5 );
+  text-decoration: none;
+  color: var(--color--light);
 }
 
 .v-navigation-app__top__toggle-menu {
@@ -178,48 +153,17 @@ export default defineComponent({
   cursor: pointer;
   user-select: none;
 
-  @media all and (min-width: 950px) {
-    display: none;
-  }
-
   svg {
     display: block;
     height: 1rem;
+    fill: var(--color--light);
   }
-}
-
-.v-navigation-app__top__date {
-  position: relative;
-  display: none;
-  @media all and (min-width: 950px) {
-    display: block;
-  }
-}
-
-.v-navigation-app__top__date-mobile {
-  position: relative;
-  display: block;
-  @media all and (min-width: 950px) {
-    display: none;
-  }
-}
-
-.v-navigation-app__top__logo-link {
-  display: block;
-}
-
-.v-navigation-app__top__logo {
-  display: block;
-  height: calc( var(--unit) * 3 );
-  width: auto;
-  margin: auto;
 }
 
 .v-navigation-app__bottom {
   position: relative;
-  border-bottom: solid 1px var(--color--main);
+  box-sizing: border-box;
   transform: translateY(0);
-  background: var(--color--light);
   z-index: 0;
   opacity: 1;
   display: none;
@@ -235,6 +179,7 @@ export default defineComponent({
 
   a {
     text-decoration: none;
+    font-family: MB_Picture_House_One_Light, sans-serif;
 
     &:hover {
       color: var(--color--main)
@@ -243,6 +188,32 @@ export default defineComponent({
 
   @media all and (min-width: 950px) {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    font-size: calc( var(--font-size) * 1.5 );
+    padding-left: var(--gutter);
+    padding-right: var(--gutter);
+  }
+}
+
+.v-navigation-app__bottom__group {
+  display: contents;
+
+  @media all and (min-width: 950px) {
+    display: flex;
+    align-items: center;
+    gap: calc( var(--gutter) / 2 );
+
+    a {
+      padding: var(--gutter--half);
+    }
+  }
+}
+
+.v-navigation-app__bottom__cta {
+  @media all and (min-width: 950px) {
+    text-decoration: underline;
   }
 }
 
