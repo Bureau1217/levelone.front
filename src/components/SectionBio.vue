@@ -191,10 +191,6 @@ export default defineComponent({
   padding-left: var(--gutter--half);
   padding-right: var(--gutter--half);
 
-  @media (max-width: 949px) {
-    height: auto !important;
-  }
-
   @media all and (min-width: 950px) {
     // -20% par rapport aux 40% d'origine
     width: 32%;
@@ -213,12 +209,6 @@ export default defineComponent({
   box-sizing: border-box;
   overflow: hidden;
   height: auto;
-
-  @media (max-width: 949px) {
-    position: static;
-    height: auto !important;
-    overflow: visible;
-  }
 }
 
 .v-section-bio__sticky__media__layer {
@@ -230,17 +220,6 @@ export default defineComponent({
     width: 100%;
     height: 100%;
     object-fit: cover;
-  }
-
-  @media (max-width: 949px) {
-    position: static;
-    // Le glissement synchronisé n'a de sens qu'avec l'empilement collant du desktop.
-    transform: none !important;
-    margin-bottom: var(--gutter);
-
-    > img {
-      height: auto;
-    }
   }
 }
 

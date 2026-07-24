@@ -59,6 +59,10 @@
   align-items: center;
   gap: calc(var(--gutter) * 1.5);
   margin-top: 20%;
+
+  @media (max-width: 768px) {
+    justify-content: center;
+  }
 }
 
 // Each timer button: reset browser defaults, just wraps the SVG
@@ -152,6 +156,10 @@
   border-radius: 8px;
   overflow: hidden;
   min-height: 525px;
+
+  @media (max-width: 768px) {
+    min-height: 380px;
+  }
 }
 
 // Left: title + body grouped at top, CTA pinned to bottom
@@ -165,6 +173,11 @@
   padding-bottom: 3%;
   padding-right: 8%;
   box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding-left: 6%;
+    padding-right: 4%;
+  }
 }
 
 // Top group: title immediately followed by body
@@ -179,6 +192,11 @@
   font-size: calc(var(--font-size) * 2.5);
   line-height: calc(var(--line-height) * 2.5);
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: calc(var(--font-size) * 1.8);
+    line-height: calc(var(--line-height) * 1.8);
+  }
 }
 
 .v-section-precommande__body {
@@ -210,23 +228,35 @@
   flex-shrink: 0;
 }
 
-// Right: image fills the full height of the block
+// Right: image fills the full height of the block, always visible.
+// `overflow: hidden` is required here: the image is deliberately oversized
+// (110%/120%, see below) to bleed-fill this column, and without clipping it
+// spills left over the text — especially once this column narrows on mobile.
 .v-section-precommande__media {
+  position: relative;
   width: 45%;
   flex-shrink: 0;
+  overflow: hidden;
 
   @media (max-width: 768px) {
-    display: none;
+    width: 36%;
   }
 }
 
+// Volontairement surdimensionnée (110%/120%) pour un effet plein cadre ; centrée
+// avec `position: absolute` + translate pour que le débord soit clippé à parts
+// égales par `overflow: hidden` sur `.v-section-precommande__media`, plutôt que
+// de couper tout l'excédent d'un seul côté (ce qui décalait le cadrage).
 .v-section-precommande__img {
   display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 110%;
   height: 120%;
   object-fit: cover;
   object-position: center bottom;
-  transform: translateY(0%);
 }
 
 
@@ -252,6 +282,17 @@
   mask-image: linear-gradient(to bottom, transparent 0%, black 30%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 30%);
   z-index: 1;
+
+  // Sur mobile, en portrait, une bande pleine largeur/90% de hauteur écrase le
+  // mark et lit comme un bandeau géant : on réduit la photo à un cadre plus
+  // petit, centré, qui ne remonte plus jusqu'au mark.
+  @media (max-width: 768px) {
+    width: 72%;
+    height: 30%;
+    bottom: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
 
 .v-section-hero__mark {
