@@ -1,11 +1,5 @@
 <template>
 
-  <transition name="transition">
-    <page-transition
-        v-if="store.state.showPageTransition"
-    ></page-transition>
-  </transition>
-
   <vue-easy-lightbox
       :visible="easyLightBoxImage !== null"
       :imgs="easyLightBoxImage"
@@ -45,7 +39,6 @@ import NavigationApp from "@/components/NavigationApp.vue"
 import AppFooter from "@/components/AppFooter.vue";
 import {useStore} from "vuex"
 import {key} from "@/store"
-import PageTransition from "@/components/PageTransition.vue"
 import VueEasyLightbox from 'vue-easy-lightbox'
 
 export default defineComponent({
@@ -58,7 +51,6 @@ export default defineComponent({
   },
 
   components: {
-    PageTransition,
     AppFooter,
     NavigationApp,
     VueEasyLightbox,
@@ -84,17 +76,15 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-.v-app {
-  padding-top: var(--navigation-height);
-}
-
 .v-app__nav {
-  position: fixed;
+  position: relative;
   width: 100%;
-  top: 0;
   z-index: 1000000;
 
   .menu-open & {
+    position: fixed;
+    top: 0;
+    left: 0;
     height: 100%;
   }
 }

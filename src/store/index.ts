@@ -16,7 +16,6 @@ export interface AppState {
   componentUnlocked: IValidateData | null
   homeData:          IApiResonse_home | IApiResponse_locked | null
   menuOpen:          boolean
-  showPageTransition: boolean
   certificationLoginData: IApiResponse_certificationLogin | null
   preorderData: IApiResponse_preorder | null
   easyLightBoxImage: string | null
@@ -31,7 +30,6 @@ export const store = createStore<AppState>({
     componentUnlocked: null,
     homeData: null,
     menuOpen: false,
-    showPageTransition: false,
     certificationLoginData: null,
     preorderData: null,
     easyLightBoxImage: null,
@@ -40,14 +38,6 @@ export const store = createStore<AppState>({
 
     changeCertificationConnection (state, data: IValidateData) {
       state.componentUnlocked = data
-    },
-
-    runPageTransition(state) {
-      state.showPageTransition = true
-
-      window.setTimeout(() => {
-        state.showPageTransition = false
-      }, 3000)
     },
 
     async setCertificationLoginData(state){

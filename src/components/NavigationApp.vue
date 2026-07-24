@@ -1,7 +1,6 @@
 <template>
   <nav
       class="v-navigation-app"
-      :class="{'hide': hide}"
   >
 
     <div
@@ -55,7 +54,7 @@
     >
       <div class="v-navigation-app__bottom__group">
         <router-link :to="{path: '/', hash: '#v-home__main'}">level one</router-link>
-        <router-link :to="{path: '/', hash: '#v-home__specification'}">spécifications</router-link>
+        <router-link :to="{path: '/', hash: '#v-home__calibre'}">spécifications</router-link>
         <router-link :to="{path: '/', hash: '#v-home__bio'}">a propos</router-link>
       </div>
 
@@ -80,21 +79,8 @@ export default defineComponent({
 
   data() {
     return {
-      hide: false,
-
       store: useStore(key)
     }
-  },
-
-  mounted() {
-    const scrollValueToHideNav = 100;
-    let holdScrollValue = 0
-
-    window.addEventListener("scroll", (e) => {
-      if      (window.scrollY > scrollValueToHideNav && holdScrollValue < window.scrollY) this.hide = true
-      else if (holdScrollValue > window.scrollY && window.scrollY > scrollValueToHideNav) this.hide = false
-      holdScrollValue = window.scrollY
-    })
   },
 
   methods: {
@@ -143,6 +129,7 @@ export default defineComponent({
 .v-navigation-app__top__brand {
   font-family: MB_Picture_House_One_Light, sans-serif;
   font-size: calc( var(--font-size) * 1.5 );
+  font-weight: 700;
   text-decoration: none;
   color: var(--color--light);
 }
@@ -180,6 +167,7 @@ export default defineComponent({
   a {
     text-decoration: none;
     font-family: MB_Picture_House_One_Light, sans-serif;
+    font-weight: 700;
 
     &:hover {
       color: var(--color--main)
@@ -214,35 +202,6 @@ export default defineComponent({
 .v-navigation-app__bottom__cta {
   @media all and (min-width: 950px) {
     text-decoration: underline;
-  }
-}
-
-.v-navigation-app {
-  transition: transform 500ms ease-in-out;
-  transform: translateY(0);
-
-  .v-navigation-app__top {
-    transition: opacity 250ms 250ms ease-in-out;
-    opacity: 1;
-  }
-
-  .v-navigation-app__bottom {
-    transition: transform 500ms ease-in-out;
-    transform: translateY(0);
-  }
-
-  &.hide {
-    transform: translateY(-100%);
-
-    .v-navigation-app__top {
-      transition: opacity 250ms ease-in-out;
-      opacity: 0;
-    }
-
-    .v-navigation-app__bottom {
-      transition: transform 500ms ease-in-out;
-      transform: translateY(100%);
-    }
   }
 }
 

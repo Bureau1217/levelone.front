@@ -8,6 +8,10 @@
   --color--light: #FFFFFF;
   --color-danger: red;
 
+  // Bleu marine du bandeau de pied de page (maquette Figma, frame 678:309) : distinct de
+  // --color--dark, propre au footer uniquement.
+  --color--footer-bg: #2C4160;
+
   --unit: 20px;
 
   --line-height:  1.15rem;

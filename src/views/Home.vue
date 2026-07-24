@@ -9,22 +9,10 @@
         v-html="intro.content"
     ></div></section-main>
 
-    <section-bio
-        v-if="('specification' in store.state.homeData)"
-        id="v-home__specification"
-        :dataSlide="store.state.homeData.specification"
-    />
+    <section-calibre id="v-home__calibre" />
+    <section-precommande id="v-home__precommande" />
 
-    <section-bio
-        v-if="('biographie' in store.state.homeData)"
-        id="v-home__bio"
-        layout="sticky"
-        :dataSlide="store.state.homeData.biographie"
-    />
-
-    <section-talents
-        id="v-home__talents"
-    />
+<section-bio id="v-home__bio" />
 
   </div>
 </template>
@@ -33,7 +21,8 @@
 import { defineComponent } from 'vue';
 import SectionMain from "@/components/SectionMain.vue"
 import SectionBio from "@/components/SectionBio.vue"
-import SectionTalents from "@/components/SectionTalents.vue"
+import SectionCalibre from "@/components/SectionCalibre.vue"
+import SectionPrecommande from "@/components/SectionPrecommande.vue"
 import {IApiResonse_home__section} from "@/global/api"
 import {useStore} from "vuex"
 import {key} from "@/store"
@@ -41,9 +30,10 @@ import {key} from "@/store"
 export default defineComponent({
   name: 'Home',
   components: {
-    SectionTalents,
     SectionBio,
-    SectionMain
+    SectionMain,
+    SectionCalibre,
+    SectionPrecommande,
   },
 
   data() {

@@ -3,6 +3,7 @@
 @import "./grid";
 @import "./typography";
 @import "./ui";
+@import "./sections";
 
 html {
   position: relative;
@@ -13,7 +14,7 @@ html {
   font-size: var(--unit);
   font-weight: 400;
   font-style: normal;
-  scroll-padding-top: 200px;
+  scroll-padding-top: var(--gutter);
 }
 
 body {
@@ -54,21 +55,6 @@ ul {
   }
 }
 
-
-/**
-vue transition
-*/
-
-
-.transition-enter-active,
-.transition-leave-active {
-  transition: opacity 0.5s ease;
-}
-
-.transition-enter-from,
-.transition-leave-to {
-  opacity: 0;
-}
 
 .vel-modal {
   z-index: 100000000000 !important;
