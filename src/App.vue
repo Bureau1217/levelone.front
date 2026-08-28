@@ -7,15 +7,15 @@
       @contextmenu="preventContextMenu($event)"
   ></vue-easy-lightbox>
 
+  <app-loader
+      v-if="loaderVisible"
+      :app-ready="appReady"
+      @leave="siteRevealed = true"
+      @finished="loaderVisible = false"
+  />
   <div
-      v-if="store.getters.appLockStatus === 'waiting'"
-      class="v-app v-app__loader"
-  >
-
-  </div>
-  <div
-      v-else
       class="v-app"
+      :class="{ 'is-loading': !siteRevealed }"
   >
 
     <div
@@ -37,6 +37,7 @@
 import { defineComponent } from 'vue';
 import NavigationApp from "@/components/NavigationApp.vue"
 import AppFooter from "@/components/AppFooter.vue";
+import AppLoader from "@/components/AppLoader.vue";
 import {useStore} from "vuex"
 import {key} from "@/store"
 import VueEasyLightbox from 'vue-easy-lightbox'
@@ -47,6 +48,10 @@ export default defineComponent({
   data() {
     return {
       store: useStore(key),
+      // The intro loader owns its own timeline; it stays mounted over the app
+      // until its choreography finishes AND the app is ready, then crossfades.
+      loaderVisible: true,
+      siteRevealed: false,
     }
   },
 
@@ -54,6 +59,7 @@ export default defineComponent({
     AppFooter,
     NavigationApp,
     VueEasyLightbox,
+    AppLoader,
   },
 
   methods: {
@@ -63,6 +69,10 @@ export default defineComponent({
   },
 
   computed: {
+    appReady(): boolean {
+      return this.store.getters.appLockStatus !== 'waiting'
+    },
+
     isLogView(): boolean {
       return this.$route.name === 'Log'
     },
@@ -76,6 +86,15 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+.v-app {
+  opacity: 1;
+  transition: opacity 600ms ease;
+}
+
+.v-app.is-loading {
+  opacity: 0;
+}
+
 .v-app__nav {
   position: relative;
   width: 100%;
