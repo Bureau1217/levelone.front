@@ -1,24 +1,34 @@
 <template>
   <div class="v-certification">
 
-<!--    header -->
-    <div  class="v-certification__intro lo-view__header" :style="{backgroundImage: `url('${certificationLoginData.image?.url}')`,}">
-      <div class="v-certification__intro__txt lo-view__header__txt lo-remove-child-margin lo-g-gutter--half">
-        <h1>{{certificationLoginData.titleName}}</h1>
-        <p>{{certificationLoginData.description}}</p>
-      </div>
-    </div>
+<!--
+    header : photo plein cadre, sans voile ni texte en surimpression (maquette Figma).
+    Image de la maquette Figma en dur (plutôt que certificationLoginData.image du CMS,
+    qui affichait un visuel différent) — à la demande explicite du client de reprendre
+    exactement le visuel Figma sur cette page.
+    -->
+    <div
+        class="v-certification__hero"
+        style="background-image: url('/img/figma/certification/certification-hero.png')"
+    ></div>
 
 <!--    unconnected-->
 
     <div
         v-if="certificationData === undefined || certificationData?.hasOwnProperty('error')"
-        class="v-certification__form lo-view__form lo-g-gutter--half"
+        class="v-certification__form lo-g-gutter"
     >
-      <h3>Veuillez vous identifier pour accéder à cette page</h3>
-      <form-locked-page
-          @validate="formValidate"
-      ></form-locked-page>
+      <div class="v-certification__form__intro lo-remove-child-margin">
+        <h1>{{certificationLoginData.titleName}}</h1>
+        <p>{{certificationLoginData.description}}</p>
+      </div>
+
+      <div class="v-certification__form__fields">
+        <form-locked-page
+            buttonText="se connecter"
+            @validate="formValidate"
+        ></form-locked-page>
+      </div>
     </div>
 
 <!--    connected-->
@@ -235,23 +245,67 @@ export default defineComponent({
   min-height: calc( 100vh - var(--navigation-height) - var(--footer-height) );
 }
 
-.v-certification__intro__txt {
-  text-shadow: 0 0 20px black;
+///// intro and form to unlock page
 
-  h1 {
-    margin: 0;
-    color: white;
-    font-weight: 900;
-  }
+// Photo plein cadre, sans voile assombri ni texte en surimpression (contrairement à
+// .lo-view__header utilisée par PreOrder.vue) : le titre/texte passe sous la photo,
+// dans .v-certification__form__intro, comme dans la maquette Figma.
+.v-certification__hero {
+  width: 100%;
+  box-sizing: border-box;
+  height: 45vw;
+  min-height: 16rem;
+  max-height: 34rem;
+  background-color: var(--color--grey);
+  background-size: cover;
+  background-position: center;
 
-  p {
-    font-weight: 900;
-    font-size: 1rem;
-    line-height: 1.5rem;
+  // Remonte la photo sous la nav fixe (même technique que le hero de la page d'accueil) :
+  // la nav transparente peut ainsi se superposer directement à l'image, comme dans la maquette.
+  margin-top: calc( var(--navigation-height) * -1 );
+}
+
+.v-certification__form {
+  width: 100%;
+  // Pas de max-width centré : les blocs gauche/droite s'alignent sur le même filet que
+  // la nav (var(--gutter) via .lo-g-gutter), au lieu d'une colonne centrée avec sa
+  // propre marge (ce qui créait un décalage visible avec les marges de la nav).
+  box-sizing: border-box;
+  padding-top: var(--section-padding-top);
+  padding-bottom: var(--section-padding-bottom);
+  display: flex;
+  flex-direction: column;
+  gap: calc( var(--gutter) * 2 );
+
+  @media all and (min-width: 950px) {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: calc( var(--gutter) * 4 );
   }
 }
 
-///// intro and form to unlock page
+.v-certification__form__intro {
+  width: 100%;
+
+  p {
+    max-width: 26rem;
+  }
+
+  @media all and (min-width: 950px) {
+    width: 40%;
+    flex-shrink: 0;
+  }
+}
+
+.v-certification__form__fields {
+  width: 100%;
+
+  @media all and (min-width: 950px) {
+    width: 55%;
+  }
+}
+
 .v-certification__clearData {
   position: absolute;
   top:    var(--gutter);

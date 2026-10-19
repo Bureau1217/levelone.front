@@ -1,6 +1,7 @@
 <template>
   <nav
       class="v-navigation-app"
+      :class="{'hide': hide, 'is-transparent': isTransparentRoute && !scrolled}"
   >
 
     <div
@@ -58,8 +59,16 @@
         <router-link :to="{path: '/', hash: '#v-home__bio'}">a propos</router-link>
       </div>
 
-      <div class="v-navigation-app__bottom__group">
-        <router-link to="/certification">certificats</router-link>
+      <router-link
+          v-if="!isHomeRoute"
+          :to="{path: '/', hash: '#v-home__main'}"
+          class="v-navigation-app__bottom__mark"
+      >
+        <img src="/img/figma/nav/nav-logo-mark.svg" alt="Level One">
+      </router-link>
+
+      <div class="v-navigation-app__bottom__group v-navigation-app__bottom__group--right">
+        <router-link to="/certification">certificat</router-link>
         <router-link class="v-navigation-app__bottom__cta" to="/pre-order">précommander</router-link>
       </div>
     </div>
@@ -79,7 +88,52 @@ export default defineComponent({
 
   data() {
     return {
+      hide: false,
+      scrolled: false,
+
       store: useStore(key)
+    }
+  },
+
+  mounted() {
+    const scrollValueToHideNav = 100;
+    let holdScrollValue = 0
+
+    window.addEventListener("scroll", (e) => {
+      this.scrolled = window.scrollY > scrollValueToHideNav
+
+      if      (window.scrollY > scrollValueToHideNav && holdScrollValue < window.scrollY) this.hide = true
+      else if (holdScrollValue > window.scrollY && window.scrollY > scrollValueToHideNav) this.hide = false
+      holdScrollValue = window.scrollY
+    })
+  },
+
+  watch: {
+    // La nav est un composant unique monté une seule fois pour toute la session (elle vit
+    // dans App.vue, en dehors de <router-view/>) : sans ça, "hide"/"scrolled" gardaient leur
+    // valeur de la page précédente au moment de changer de route, ce qui pouvait la faire
+    // clignoter le temps que le nouveau scroll se stabilise. On la remet toujours visible et
+    // à jour dès qu'on arrive sur une nouvelle page.
+    '$route'() {
+      this.hide = false
+      this.$nextTick(() => {
+        this.scrolled = window.scrollY > 100
+      })
+    }
+  },
+
+  computed: {
+    // Sur la page CERTIFICATS, la nav est transparente et se superpose à la photo (maquette
+    // Figma) tant qu'on est en haut de page ; elle redevient noire dès qu'on quitte la photo,
+    // comme sur les autres pages.
+    isTransparentRoute(): boolean {
+      return this.$route.name === 'Certification' || this.$route.name === 'PreOrder'
+    },
+
+    // Le mark centré ne fait pas partie de la nav de la page d'accueil dans la maquette
+    // (le logo y est déjà géant dans le hero) : on ne l'affiche que sur les autres pages.
+    isHomeRoute(): boolean {
+      return this.$route.name === 'Home'
     }
   },
 
@@ -103,9 +157,14 @@ export default defineComponent({
   box-sizing: border-box;
   background-color: var(--color--black);
   color: var(--color--light);
+  transition: background-color 250ms ease-in-out;
 
   .menu-open & {
     height: 100%;
+  }
+
+  &.is-transparent {
+    background-color: transparent;
   }
 }
 
@@ -129,7 +188,6 @@ export default defineComponent({
 .v-navigation-app__top__brand {
   font-family: MB_Picture_House_One_Light, sans-serif;
   font-size: calc( var(--font-size) * 1.5 );
-  font-weight: 700;
   text-decoration: none;
   color: var(--color--light);
 }
@@ -167,7 +225,6 @@ export default defineComponent({
   a {
     text-decoration: none;
     font-family: MB_Picture_House_One_Light, sans-serif;
-    font-weight: 700;
 
     &:hover {
       color: var(--color--main)
@@ -177,7 +234,6 @@ export default defineComponent({
   @media all and (min-width: 950px) {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     height: 100%;
     font-size: calc( var(--font-size) * 1.5 );
     padding-left: var(--gutter);
@@ -188,10 +244,14 @@ export default defineComponent({
 .v-navigation-app__bottom__group {
   display: contents;
 
+  // Trois colonnes de largeur égale (gauche / logo / droite), comme dans la maquette
+  // (chaque colonne y a le même flex-grow) : ça centre vraiment le logo, pas juste
+  // "space-between" qui décale le centre selon la largeur du texte de chaque côté.
   @media all and (min-width: 950px) {
     display: flex;
     align-items: center;
     gap: calc( var(--gutter) / 2 );
+    flex: 1 0 0;
 
     a {
       padding: var(--gutter--half);
@@ -199,9 +259,64 @@ export default defineComponent({
   }
 }
 
+.v-navigation-app__bottom__group--right {
+  @media all and (min-width: 950px) {
+    justify-content: flex-end;
+  }
+}
+
 .v-navigation-app__bottom__cta {
   @media all and (min-width: 950px) {
     text-decoration: underline;
+  }
+}
+
+.v-navigation-app__bottom__mark {
+  display: none;
+  user-select: none;
+
+  @media all and (min-width: 950px) {
+    display: flex;
+    flex: 1 0 0;
+    align-items: center;
+    justify-content: center;
+  }
+
+  img {
+    display: block;
+    // +35%, puis +25%, puis encore +25% (demandes client successives), par rapport aux
+    // 1.6rem d'origine.
+    height: 3.4rem;
+    width: auto;
+  }
+}
+
+.v-navigation-app {
+  transition: transform 500ms ease-in-out;
+  transform: translateY(0);
+
+  .v-navigation-app__top {
+    transition: opacity 250ms 250ms ease-in-out;
+    opacity: 1;
+  }
+
+  .v-navigation-app__bottom {
+    transition: transform 500ms ease-in-out;
+    transform: translateY(0);
+  }
+
+  &.hide {
+    transform: translateY(-100%);
+
+    .v-navigation-app__top {
+      transition: opacity 250ms ease-in-out;
+      opacity: 0;
+    }
+
+    .v-navigation-app__bottom {
+      transition: transform 500ms ease-in-out;
+      transform: translateY(100%);
+    }
   }
 }
 

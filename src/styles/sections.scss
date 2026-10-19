@@ -244,15 +244,17 @@
 }
 
 // Volontairement surdimensionnée (110%/120%) pour un effet plein cadre ; centrée
-// avec `position: absolute` + translate pour que le débord soit clippé à parts
-// égales par `overflow: hidden` sur `.v-section-precommande__media`, plutôt que
-// de couper tout l'excédent d'un seul côté (ce qui décalait le cadrage).
+// horizontalement mais callée en bas (bottom: 0) pour que tout l'excédent
+// vertical soit clippé en haut par `overflow: hidden` sur
+// `.v-section-precommande__media`, plutôt qu'à parts égales — ça évite de
+// couper la lanière du bracelet qui arrive en bas de la photo et donne
+// l'impression que l'image continue au-delà du rectangle.
 .v-section-precommande__img {
   display: block;
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  bottom: -20%;
+  left: 52%;
+  transform: translateX(-50%);
   width: 110%;
   height: 120%;
   object-fit: cover;
