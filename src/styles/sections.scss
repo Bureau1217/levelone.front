@@ -228,37 +228,41 @@
   flex-shrink: 0;
 }
 
-// Right: image fills the full height of the block, always visible.
-// `overflow: hidden` is required here: the image is deliberately oversized
-// (110%/120%, see below) to bleed-fill this column, and without clipping it
-// spills left over the text — especially once this column narrows on mobile.
+// Right: the photo, slightly rotated and enlarged so both straps leave
+// through the edges of the black block itself (bottom strap through the
+// bottom edge, top strap through the top/right edges) — the block's own
+// `overflow: hidden` + radius is the mask. The photo's background is black,
+// so wherever it spills past this column (onto the text side) it's invisible;
+// that's why this column must NOT clip: its left edge would cut the bottom
+// strap with a hard vertical line.
 .v-section-precommande__media {
   position: relative;
   width: 45%;
   flex-shrink: 0;
-  overflow: hidden;
 
   @media (max-width: 768px) {
     width: 36%;
   }
 }
 
-// Volontairement surdimensionnée (110%/120%) pour un effet plein cadre ; centrée
-// horizontalement mais callée en bas (bottom: 0) pour que tout l'excédent
-// vertical soit clippé en haut par `overflow: hidden` sur
-// `.v-section-precommande__media`, plutôt qu'à parts égales — ça évite de
-// couper la lanière du bracelet qui arrive en bas de la photo et donne
-// l'impression que l'image continue au-delà du rectangle.
+// Text stays above the photo where the two overlap.
+.v-section-precommande__content {
+  position: relative;
+  z-index: 1;
+}
+
+// −10° / 127.5% / offsets found by checking the rotated photo's corners
+// against the block: every photo edge that a strap crosses ends up outside
+// the block, while the case and crown stay fully inside.
 .v-section-precommande__img {
   display: block;
   position: absolute;
-  bottom: -20%;
-  left: 52%;
-  transform: translateX(-50%);
-  width: 110%;
-  height: 120%;
-  object-fit: cover;
-  object-position: center bottom;
+  right: -8%;
+  bottom: -5%;
+  height: 100.5%;
+  width: auto;
+  max-width: none;
+  transform: rotate(-10deg);
 }
 
 
@@ -269,20 +273,26 @@
   width: 100%;
   overflow: hidden;
   background-color: var(--color--black);
-  height: 100vh;
+  // Le hero tient exactement dans l'écran sous la nav : sinon le bas de la
+  // photo passe sous la ligne de flottaison au chargement.
+  height: calc(100vh - var(--navigation-height));
   box-sizing: border-box;
 }
 
 .v-section-hero__watch {
   position: absolute;
+  // Le haut de la photo reste en haut du hero, et son bas touche le bas du
+  // hero : la sangle va jusqu'à la limite du noir, sans bande vide dessous.
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 90%;
-  object-fit: cover;
-  object-position: center top;
-  mask-image: linear-gradient(to bottom, transparent 0%, black 30%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 30%);
+  height: 100%;
+  // contain (et non cover) : la photo entière est visible, sans recadrer le
+  // bas de la montre ; le fond noir de la photo se fond dans celui du hero.
+  object-fit: contain;
+  object-position: center bottom;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 27%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 27%);
   z-index: 1;
 
   // Sur mobile, en portrait, une bande pleine largeur/90% de hauteur écrase le
@@ -297,25 +307,28 @@
   }
 }
 
-.v-section-hero__mark {
-  position: absolute;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
 
-.v-section-hero__icon {
-  display: block;
-  width: clamp(180px, 22vw, 320px);
-  height: auto;
+// Date du jour (gauche) et heure (droite) en bas du hero, mises à jour en direct.
+// Marge gauche à 2%, comme le reste du site.
+.v-section-hero__clock {
+  position: absolute;
+  bottom: var(--gutter);
+  z-index: 2;
+  color: var(--color--light);
+  font-family: MB_Picture_House_One_Light, sans-serif;
+  font-size: calc( var(--font-size) * 1.5 );
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .05em;
   user-select: none;
 }
 
+.v-section-hero__clock--date {
+  left: 2%;
+}
+
+.v-section-hero__clock--time {
+  right: 2%;
+}
 
 // ─── Intro ───────────────────────────────────────────────────────────────────
 
@@ -363,24 +376,3 @@
   will-change: transform;
 }
 
-.v-section-showcase__frame {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: clamp(280px, 44.5vw, 641px);
-  height: clamp(188px, 29.9vw, 430px);
-  overflow: hidden;
-  z-index: 100;
-  pointer-events: none;
-}
-
-.v-section-showcase__frame__img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center center;
-  will-change: transform;
-}

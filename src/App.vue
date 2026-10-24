@@ -10,17 +10,23 @@
   <app-loader
       v-if="loaderVisible"
       :app-ready="appReady"
-      @leave="siteRevealed = true"
+      @reveal="siteRevealed = true"
+      @leave="navDropped = true"
       @finished="loaderVisible = false"
   />
   <div
       class="v-app"
-      :class="{ 'is-loading': !siteRevealed }"
+      :class="{
+        'is-loading': !siteRevealed,
+        'is-nav-up': !navDropped,
+        'is-intro': loaderVisible && !isLogView,
+      }"
   >
 
     <div
         v-if="!isLogView"
         class="v-app__nav"
+        :class="{ 'is-intro': loaderVisible }"
     >
       <navigation-app/>
     </div>
@@ -52,6 +58,7 @@ export default defineComponent({
       // until its choreography finishes AND the app is ready, then crossfades.
       loaderVisible: true,
       siteRevealed: false,
+      navDropped: false,
     }
   },
 
@@ -95,10 +102,30 @@ export default defineComponent({
   opacity: 0;
 }
 
+// While the nav is still up off-screen (or dropping in), its empty slot would
+// show the white page background above the (black) hero: paint it black until
+// the intro is over and the nav has landed.
+.v-app.is-intro {
+  background-color: var(--color--black);
+}
+
 .v-app__nav {
   position: relative;
   width: 100%;
   z-index: 1000000;
+  // Intro: the nav drops in from above the screen once the loader hands over
+  // (duration kept in sync with REVEAL_DUR in AppLoader.vue).
+  transition: transform 700ms cubic-bezier(.65,0,.35,1);
+
+  .is-nav-up & {
+    transform: translateY(-100%);
+  }
+
+  // The loader's logo flies into this exact slot; the nav's own logo only
+  // shows once the loader is gone, so the hand-off is seamless.
+  &.is-intro :deep(.v-navigation-app__bottom__mark img) {
+    visibility: hidden;
+  }
 
   .menu-open & {
     position: fixed;

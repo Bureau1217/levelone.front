@@ -9,13 +9,13 @@
       >
         <div
             class="v-section-bio__sticky__media__window"
-            :style="{ height: sectionHeights[0] ? sectionHeights[0] + 'px' : undefined }"
+            :style="cardStyle"
         >
           <div
               v-for="(img, i) in mediaImages"
               :key="img"
               class="v-section-bio__sticky__media__layer"
-              :style="{ transform: `translateY(${revealOffset(i)}%)` }"
+              :style="{ transform: `translateY(${revealOffsets[i] || 0}px)` }"
           >
             <img :src="img" alt="">
           </div>
@@ -28,6 +28,7 @@
           <section
               ref="section1Ref"
               class="v-bio-page__section"
+              :style="cardStyle"
           >
             <div class="v-bio-page__divider"></div>
             <div class="content-row">
@@ -41,7 +42,8 @@
 
           <section
               ref="section2Ref"
-              class="v-bio-page__section v-bio-page__section--tall"
+              class="v-bio-page__section"
+              :style="cardStyle"
           >
             <div class="v-bio-page__divider"></div>
             <div class="content-row">
@@ -55,6 +57,7 @@
           <section
               ref="section3Ref"
               class="v-bio-page__section"
+              :style="cardStyle"
           >
             <div class="v-bio-page__divider"></div>
             <div class="content-row">
@@ -97,15 +100,15 @@ export default defineComponent({
         '/img/figma/bio/bio-photo-2.jpg',
         '/img/figma/bio/bio-photo-3.jpg',
       ],
-      // Hauteur de chaque photo calquée sur celle du bloc de texte en vis-à-vis,
-      // pour que les deux colonnes s'épinglent puis se recouvrent aux mêmes points
-      // de scroll (les deux empilements sont pilotés par le même scrollY).
-      sectionHeights: [0, 0, 0] as number[],
+      // Hauteur unique partagée par la fenêtre photo ET chacun des 3 blocs de
+      // texte : les deux colonnes s'épinglent puis se recouvrent donc toujours aux
+      // mêmes points de scroll, quel que soit le texte de chaque bloc.
+      cardHeight: 0,
       // Pas de types DOM pour ResizeObserver dans cette version de TypeScript.
       resizeObserver: null as any,
-      // Distance scrollée depuis le haut de la colonne image (mêmes unités que
-      // `sectionHeights`), pour savoir laquelle des 3 photos doit être révélée.
-      scrolledIntoMedia: 0,
+      // Décalage vertical (px) de chaque photo dans la fenêtre : 0 = en place,
+      // hauteur de la fenêtre = entièrement cachée sous son bord bas.
+      revealOffsets: [0, 0, 0] as number[],
     }
   },
 
@@ -113,57 +116,102 @@ export default defineComponent({
     // Hauteur totale de la colonne (photo fixe + marge de dernière révélation),
     // pour que la fenêtre collante ait le temps de s'épingler jusqu'au bout.
     mediaTotalHeight(): number {
-      const total = this.sectionHeights.reduce((sum, h) => sum + h, 0)
-      return total ? total + 200 : 0
+      return this.cardHeight ? this.cardHeight * this.mediaImages.length + 200 : 0
+    },
+
+    cardStyle(): Record<string, string> {
+      return this.cardHeight ? { height: `${this.cardHeight}px` } : {}
     },
   },
 
   mounted() {
-    this.measureSectionHeights()
+    this.measureCardHeight()
     this.onScroll()
 
     // Un simple listener resize ne suffit pas : le texte peut encore reflow après le
     // montage (chargement de la webfont), ResizeObserver capte tout changement de taille.
     const RO = (window as any).ResizeObserver
-    this.resizeObserver = new RO(() => this.measureSectionHeights())
-    for (const el of [this.$refs.section1Ref, this.$refs.section2Ref, this.$refs.section3Ref]) {
-      if (el instanceof HTMLElement) this.resizeObserver.observe(el)
+    // On observe le contenu des blocs (pas les blocs eux-mêmes, dont on impose la
+    // hauteur) et la colonne photo (sa largeur fixe la hauteur de la photo).
+    this.resizeObserver = new RO(() => {
+      this.measureCardHeight()
+      this.onScroll()
+    })
+    const media = this.$refs.mediaRef
+    if (media instanceof HTMLElement) this.resizeObserver.observe(media)
+    for (const el of this.sectionEls()) {
+      Array.from(el.children).forEach((child) => this.resizeObserver.observe(child))
     }
 
     window.addEventListener('scroll', this.onScroll, { passive: true })
+    window.addEventListener('resize', this.onResize)
   },
 
   beforeUnmount() {
     this.resizeObserver?.disconnect()
     window.removeEventListener('scroll', this.onScroll)
+    window.removeEventListener('resize', this.onResize)
   },
 
   methods: {
-    measureSectionHeights() {
-      this.sectionHeights = [this.$refs.section1Ref, this.$refs.section2Ref, this.$refs.section3Ref]
-          .map((el: unknown) => el instanceof HTMLElement ? el.offsetHeight : 0)
+    // La largeur de colonne est suivie par le ResizeObserver, mais pas la hauteur
+    // de l'écran, qui plafonne aussi la hauteur des cartes.
+    onResize() {
+      this.measureCardHeight()
+      this.onScroll()
     },
 
+    sectionEls(): HTMLElement[] {
+      return [this.$refs.section1Ref, this.$refs.section2Ref, this.$refs.section3Ref]
+          .filter((el: unknown): el is HTMLElement => el instanceof HTMLElement)
+    },
+
+    // Hauteur = la photo entière à son ratio (2:3) dans la largeur de la colonne,
+    // plafonnée à l'écran (moins la marge d'épinglage en haut et en bas) pour que
+    // le bas de la photo — là où chaque glissement commence — reste visible.
+    // Si un texte venait à dépasser, tout grandit pour lui laisser la place, avec
+    // une marge minimale avant le bloc suivant.
+    measureCardHeight() {
+      const PHOTO_RATIO = 1250 / 833
+      const MIN_GAP = 48
+
+      const media = this.$refs.mediaRef
+      const win = media instanceof HTMLElement
+          ? media.querySelector('.v-section-bio__sticky__media__window')
+          : null
+      if (!(win instanceof HTMLElement)) return
+
+      // `top: var(--gutter)` des éléments sticky, lu tel que rendu.
+      const pinTop = parseFloat(getComputedStyle(win).top) || 0
+      const photoHeight = Math.min(win.clientWidth * PHOTO_RATIO, window.innerHeight - 2 * pinTop)
+
+      // Hauteur naturelle du contenu (séparateur + lignes), indépendante de la
+      // hauteur imposée au bloc : bas du dernier enfant dans le bloc (sticky, donc
+      // c'est bien son offsetParent).
+      const tallestText = Math.max(0, ...this.sectionEls().map((el) => {
+        const last = el.lastElementChild as HTMLElement | null
+        return last ? last.offsetTop + last.offsetHeight : 0
+      }))
+
+      this.cardHeight = Math.ceil(Math.max(photoHeight, tallestText + MIN_GAP))
+    },
+
+    // Le bord haut de la photo `i` suit exactement le séparateur (haut) du bloc
+    // de texte `i` : la photo commence à monter pile quand ce séparateur passe le
+    // bas de la fenêtre image, à la même vitesse que le scroll, et finit en place
+    // quand le bloc s'épingle en haut. Les deux colonnes bougent donc d'un seul
+    // tenant, sans accélération.
     onScroll() {
-      const el = this.$refs.mediaRef
-      if (!(el instanceof HTMLElement)) return
-      this.scrolledIntoMedia = Math.max(0, -el.getBoundingClientRect().top)
-    },
+      const win = (this.$refs.mediaRef as HTMLElement | undefined)
+          ?.querySelector('.v-section-bio__sticky__media__window')
+      if (!(win instanceof HTMLElement)) return
 
-    // Position verticale (en % de sa propre hauteur) de la photo `i` : 0% = en
-    // place, 100% = complètement cachée sous le bas de son emplacement. La photo
-    // ne glisse en place que sur les derniers px du délai de la précédente, pour
-    // qu'elle reste invisible tant que ce n'est pas encore son tour.
-    revealOffset(i: number): number {
-      if (i === 0) return 0
-
-      const TRANSITION = 150
-      const revealEnd = this.sectionHeights.slice(0, i).reduce((sum, h) => sum + h, 0)
-      const revealStart = Math.max(0, revealEnd - TRANSITION)
-      const span = revealEnd - revealStart || 1
-      const progress = Math.min(1, Math.max(0, (this.scrolledIntoMedia - revealStart) / span))
-
-      return (1 - progress) * 100
+      const winRect = win.getBoundingClientRect()
+      this.revealOffsets = this.sectionEls().map((el, i) => {
+        if (i === 0) return 0
+        const dividerTop = el.getBoundingClientRect().top
+        return Math.min(winRect.height, Math.max(0, dividerTop - winRect.top))
+      })
     },
   },
 });
@@ -249,26 +297,16 @@ export default defineComponent({
   }
 }
 
-// Chaque section s'épingle à la même hauteur que l'image en vis-à-vis, pour qu'au
-// scroll la suivante glisse par-dessus et prenne exactement la place de la précédente.
+// Chaque section a exactement la hauteur de la photo en vis-à-vis et s'épingle au
+// même niveau, pour qu'au scroll la suivante glisse par-dessus et prenne exactement
+// la place de la précédente.
 .v-bio-page__section {
   position: sticky;
   top: var(--gutter);
   box-sizing: border-box;
   background-color: var(--color--light);
-  padding-bottom: 120px;
-
-  &.v-bio-page__section--tall {
-    padding-bottom: 220px;
-  }
-
-  @media (max-width: 650px) {
-    padding-bottom: 48px;
-
-    &.v-bio-page__section--tall {
-      padding-bottom: 64px;
-    }
-  }
+  // Hauteur imposée en JS (`cardHeight`), identique à celle de la photo.
+  overflow: hidden;
 }
 
 .v-bio-page__divider {

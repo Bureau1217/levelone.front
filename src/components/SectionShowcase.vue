@@ -15,17 +15,6 @@
           :style="bgImageStyle(i)"
       >
 
-      <div class="v-section-showcase__frame">
-        <img
-            v-for="(img, i) in frameImages"
-            :key="'frame-' + img"
-            :src="img"
-            alt=""
-            class="v-section-showcase__frame__img"
-            :style="frameImageStyle(i)"
-        >
-      </div>
-
     </div>
   </div>
 </template>
@@ -42,11 +31,6 @@ export default defineComponent({
         '/img/figma/main-slider/stack-1-wrist.jpg',
         '/img/figma/main-slider/stack-2-movement.jpg',
         '/img/figma/main-slider/stack-3-suit.jpg',
-      ],
-      frameImages: [
-        '/img/figma/slider/1.png',
-        '/img/figma/slider/2.png',
-        '/img/figma/slider/3.png',
       ],
       scrolledVh: 0,
     }
@@ -76,15 +60,6 @@ export default defineComponent({
       const offset = Math.max(0, i - this.scrolledVh) * 100
       return {
         transform: `translateY(${offset}vh)`,
-        zIndex: i + 1,
-      }
-    },
-
-    // Frame images follow the same proportion, scaled to frame height
-    frameImageStyle(i: number) {
-      const offset = Math.max(0, i - this.scrolledVh)
-      return {
-        transform: `translateY(calc(${offset} * clamp(188px, 29.9vw, 430px)))`,
         zIndex: i + 1,
       }
     },

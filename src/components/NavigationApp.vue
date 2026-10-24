@@ -60,7 +60,6 @@
       </div>
 
       <router-link
-          v-if="!isHomeRoute"
           :to="{path: '/', hash: '#v-home__main'}"
           class="v-navigation-app__bottom__mark"
       >
@@ -128,12 +127,6 @@ export default defineComponent({
     // comme sur les autres pages.
     isTransparentRoute(): boolean {
       return this.$route.name === 'Certification' || this.$route.name === 'PreOrder'
-    },
-
-    // Le mark centré ne fait pas partie de la nav de la page d'accueil dans la maquette
-    // (le logo y est déjà géant dans le hero) : on ne l'affiche que sur les autres pages.
-    isHomeRoute(): boolean {
-      return this.$route.name === 'Home'
     }
   },
 

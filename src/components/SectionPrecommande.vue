@@ -22,7 +22,7 @@
 
       <div class="v-section-precommande__media">
         <img
-            src="/img/figma/precommande/precommande-bg.jpg"
+            src="/img/figma/precommande/back.jpg"
             alt=""
             class="v-section-precommande__img"
         >
