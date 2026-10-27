@@ -26,7 +26,6 @@
     <div
         v-if="!isLogView"
         class="v-app__nav"
-        :class="{ 'is-intro': loaderVisible }"
     >
       <navigation-app/>
     </div>
@@ -114,17 +113,11 @@ export default defineComponent({
   width: 100%;
   z-index: 1000000;
   // Intro: the nav drops in from above the screen once the loader hands over
-  // (duration kept in sync with REVEAL_DUR in AppLoader.vue).
+  // (duration kept in sync with LEAVE_DUR in AppLoader.vue).
   transition: transform 700ms cubic-bezier(.65,0,.35,1);
 
   .is-nav-up & {
     transform: translateY(-100%);
-  }
-
-  // The loader's logo flies into this exact slot; the nav's own logo only
-  // shows once the loader is gone, so the hand-off is seamless.
-  &.is-intro :deep(.v-navigation-app__bottom__mark img) {
-    visibility: hidden;
   }
 
   .menu-open & {

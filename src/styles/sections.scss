@@ -7,28 +7,13 @@
 }
 
 .v-section-calibre__inner {
-  display: grid;
-  // left (text + timers) | gap | image | right-spacer
-  grid-template-columns: 5fr 1fr 7fr 1fr;
-  align-items: start;
   box-sizing: border-box;
-  padding-left: 5%;
-  padding-right: 5%;
+  padding-left: 12%;
+  padding-right: 12%;
 
   @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-// Left column stacks text and timers vertically
-.v-section-calibre__left {
-  display: flex;
-  flex-direction: column;
-  padding-right: var(--gutter);
-
-  @media (max-width: 768px) {
-    padding-right: 0;
-    margin-bottom: calc(var(--gutter) * 2);
+    padding-left: 6%;
+    padding-right: 6%;
   }
 }
 
@@ -37,8 +22,51 @@
   font-size: calc(var(--font-size) * 2);
   line-height: calc(var(--line-height) * 2);
   font-weight: normal;
+  text-align: center;
   margin-top: 0;
-  margin-bottom: calc(var(--line-height) * 1);
+  margin-bottom: calc(var(--line-height) * 3);
+}
+
+// Each spec row: text left | image right, tight gap between them
+.v-section-calibre__row {
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  column-gap: var(--gutter);
+  align-items: center;
+
+  & + & {
+    margin-top: calc(var(--line-height) * 4);
+  }
+
+  // Even rows flip: image left | text right
+  &:nth-of-type(even) {
+    grid-template-columns: 7fr 5fr;
+
+    .v-section-calibre__text {
+      order: 2;
+    }
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    row-gap: var(--gutter);
+
+    &:nth-of-type(even) {
+      grid-template-columns: 1fr;
+
+      .v-section-calibre__text {
+        order: 0;
+      }
+    }
+  }
+}
+
+.v-section-calibre__subtitle {
+  font-family: MB_Picture_House_One_Light, sans-serif;
+  font-size: calc(var(--font-size) * 1.4);
+  line-height: calc(var(--line-height) * 1.4);
+  font-weight: normal;
+  margin: 0;
 }
 
 .v-section-calibre__divider {
@@ -53,91 +81,15 @@
   line-height: var(--line-height);
 }
 
-// Timer row — 20% gap below the text block
-.v-section-calibre__timers {
-  display: flex;
-  align-items: center;
-  gap: calc(var(--gutter) * 1.5);
-  margin-top: 20%;
-
-  @media (max-width: 768px) {
-    justify-content: center;
-  }
-}
-
-// Each timer button: reset browser defaults, just wraps the SVG
-.v-section-calibre__timer {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  display: block;
-  line-height: 0;
-}
-
-.v-section-calibre__timer-svg {
-  width: 38px;
-  height: 38px;
-  display: block;
-}
-
-// Track: hairline grey ring always visible
-.v-section-calibre__timer-track {
-  fill: none;
-  stroke: var(--color--grey);
-  stroke-width: 1;
-}
-
-// Fill: grey stroke that animates clockwise from 12 o'clock
-.v-section-calibre__timer-fill {
-  fill: none;
-  stroke: var(--color--black);
-  stroke-width: 1;
-  stroke-dasharray: 100.53; // 2π × r(16)
-  stroke-dashoffset: 100.53;
-  transform: rotate(-90deg);
-  transform-origin: 19px 19px; // centre of viewBox
-}
-
-// Slide number centred inside the circle
-.v-section-calibre__timer-num {
-  font-family: var(--font-family);
-  font-size: 9px;
-  fill: var(--color--black);
-  user-select: none;
-}
-
-// Gap and spacer columns: empty, grid handles spacing
-.v-section-calibre__gap,
-.v-section-calibre__spacer {
-  @media (max-width: 768px) {
-    display: none;
-  }
-}
-
 .v-section-calibre__media {
   position: relative;
-
-  @media (max-width: 768px) {
-    grid-column: 1;
-  }
 }
 
 .v-section-calibre__img {
   display: block;
-  width: 100%;
+  width: 60%;
   height: auto;
-}
-
-// Cross-fade between slides
-.v-calibre-fade-enter-active,
-.v-calibre-fade-leave-active {
-  transition: opacity 0.4s ease;
-}
-
-.v-calibre-fade-enter-from,
-.v-calibre-fade-leave-to {
-  opacity: 0;
+  margin: 0 auto;
 }
 
 
@@ -320,6 +272,13 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: .05em;
   user-select: none;
+  // Intro : date et heure remontent depuis sous le bas du hero (qui les coupe)
+  // en même temps que la nav descend — même durée que dans App.vue.
+  transition: transform 700ms cubic-bezier(.65,0,.35,1);
+
+  .v-app.is-nav-up & {
+    transform: translateY(calc(100% + var(--gutter)));
+  }
 }
 
 .v-section-hero__clock--date {

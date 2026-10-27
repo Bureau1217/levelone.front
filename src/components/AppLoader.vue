@@ -1,5 +1,5 @@
 <template>
-  <div class="v-loader" :class="{ 'is-dark': dark, 'is-out': leaving }">
+  <div class="v-loader" :class="{ 'is-out': leaving }">
     <div class="v-loader__bg"></div>
     <svg
         class="v-loader__svg"
@@ -58,16 +58,6 @@
         </template>
       </g>
     </svg>
-
-    <!-- Once the dial is gone: the nav logo appears black on white, turns
-         white as the background goes black, then flies to its slot in the nav. -->
-    <img
-        class="v-loader__logo"
-        :class="{ 'is-visible': logoVisible, 'is-sliding': logoTarget !== null, 'is-gone': logoGone }"
-        :style="logoStyle"
-        src="/img/figma/nav/nav-logo-mark.svg"
-        alt=""
-    >
   </div>
 </template>
 
@@ -86,14 +76,11 @@ import {
 // 4. ELEM_START…   — ticks, then dots, then numerals simply fade in
 // 5. FULL_HOLD     — the finished dial holds ~2s (waits here for the app too)
 // 6. exit          — numerals/dots/ticks fade out, the rings un-draw
-// 7. logo          — the nav logo fades in, black, centred on the white page
-// 8. dark          — the background fades to black, the logo turns white
-//    Once the background is fully black, the site fades in *underneath* it
-//    ('reveal'), so nothing white can show through during the hand-off.
-// 9. slide         — the logo flies up into its slot in the nav; meanwhile the
-//    black background fades out over the (black) hero and the nav drops in
-//    from above the screen ('leave', App.vue). The loader unmounts once the
-//    logo has landed, and the nav's own logo takes over in the same spot.
+// 7. reveal        — the white background fades out while the site (the hero)
+//    fades in underneath it ('reveal', App.vue)
+// 8. leave         — a beat later the nav drops in from above the screen and
+//    the hero's date/time rise from below it ('leave', App.vue). The loader
+//    unmounts once they have landed.
 const BLANK_HOLD    = 420
 const RIM_DUR       = 900
 const POST_RING_GAP = 320
@@ -127,13 +114,8 @@ const RING_OUT = {
 }
 const OUT_TOTAL     = RING_OUT.rim.delay + RING_OUT.rim.dur
 
-const LOGO_IN    = 500   // logo fade-in (black on white)
-const LOGO_HOLD  = 700
-const DARK_DUR   = 700   // white → black, logo black → white
-const DARK_HOLD  = 150
-const SLIDE_DUR  = 900   // logo flight to the nav
-const REVEAL_LAG = 450   // site / nav start appearing this long into the flight
-const REVEAL_DUR = 700   // keep in sync with the nav drop-in in App.vue
+const LEAVE_LAG  = 300   // nav / date / time start sliding this long into the fade
+const LEAVE_DUR  = 700   // keep in sync with the nav drop-in in App.vue
 
 const EASE = 'cubic-bezier(.65,0,.35,1)'
 
@@ -162,10 +144,6 @@ export default defineComponent({
       DIAL_TICKS, DIAL_DOTS, DIAL_NUMERALS,
       holdDone: false,
       phase: 'in' as 'in' | 'out',
-      logoVisible: false,
-      dark: false,
-      logoTarget: null as null | { x: number, y: number, h: number },
-      logoGone: false,
       leaving: false,
       timers: [] as number[],
     }
@@ -189,17 +167,6 @@ export default defineComponent({
     this.timers.forEach((t) => window.clearTimeout(t))
   },
 
-  computed: {
-    logoStyle(): Record<string, string> {
-      if (!this.logoTarget) return {}
-      return {
-        left: `${this.logoTarget.x}px`,
-        top: `${this.logoTarget.y}px`,
-        height: `${this.logoTarget.h}px`,
-      }
-    },
-  },
-
   methods: {
     tryLeave() {
       if (this.phase === 'out' || !this.holdDone || !this.appReady) return
@@ -211,7 +178,6 @@ export default defineComponent({
       if (prefersReducedMotion()) {
         this.at(40, () => {
           this.leaving = true
-          this.logoGone = true
           this.$emit('reveal')
           this.$emit('leave')
         })
@@ -219,47 +185,19 @@ export default defineComponent({
         return
       }
 
-      const logoAt  = OUT_TOTAL
-      const darkAt  = logoAt + LOGO_IN + LOGO_HOLD
-      const slideAt = darkAt + DARK_DUR + DARK_HOLD
-      const revealAt = slideAt + REVEAL_LAG
+      const revealAt = OUT_TOTAL
+      const leaveAt  = revealAt + LEAVE_LAG
 
-      this.at(logoAt, () => { this.logoVisible = true })
-      this.at(darkAt, () => { this.dark = true })
-      this.at(darkAt + DARK_DUR, () => this.$emit('reveal'))
-      this.at(slideAt, () => { this.slideLogo() })
       this.at(revealAt, () => {
         this.leaving = true
-        this.$emit('leave')
+        this.$emit('reveal')
       })
-      this.at(Math.max(slideAt + SLIDE_DUR, revealAt + REVEAL_DUR), () => this.$emit('finished'))
+      this.at(leaveAt, () => this.$emit('leave'))
+      this.at(leaveAt + LEAVE_DUR, () => this.$emit('finished'))
     },
 
     at(ms: number, fn: () => void) {
       this.timers.push(window.setTimeout(fn, ms))
-    },
-
-    // Target = the nav's own logo. The nav is still translated off-screen at
-    // this point (App.vue), so measure it relative to the nav itself — on load
-    // the nav sits at the very top of the viewport. No visible nav logo (log
-    // screen, mobile top bar): fly to the nav's centre and fade out instead.
-    slideLogo() {
-      const nav = document.querySelector('.v-app__nav')
-      const mark = document.querySelector('.v-navigation-app__bottom__mark img')
-      const navTop = nav ? nav.getBoundingClientRect().top : 0
-      const rect = mark ? mark.getBoundingClientRect() : null
-
-      if (rect && rect.width > 0) {
-        this.logoTarget = {
-          x: rect.left + rect.width / 2,
-          y: rect.top - navTop + rect.height / 2,
-          h: rect.height,
-        }
-      } else {
-        const navHeight = nav ? (nav as HTMLElement).offsetHeight : 80
-        this.logoTarget = { x: window.innerWidth / 2, y: navHeight / 2, h: navHeight * .6 }
-        this.logoGone = true
-      }
     },
 
     // --len / stroke-dasharray must be strings — Vue's style patcher drops
@@ -305,48 +243,11 @@ export default defineComponent({
   position: absolute;
   inset: 0;
   background-color: var(--color--light, #fff);
-  transition: background-color 700ms ease, opacity 600ms ease;
-
-  .is-dark & {
-    background-color: var(--color--black, #000);
-  }
+  transition: opacity 600ms ease;
 
   .is-out & {
     opacity: 0;
   }
-}
-
-// The SVG is white (it's the nav's logo): brightness(0) renders it black on the
-// white page, then it eases back to white as the background goes black.
-.v-loader__logo {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  height: clamp(5rem, 14vw, 9rem);
-  width: auto;
-  transform: translate(-50%, -50%);
-  opacity: 0;
-  filter: brightness(0);
-  pointer-events: none;
-  user-select: none;
-  transition:
-      opacity 500ms ease,
-      filter 700ms ease;
-
-  &.is-visible { opacity: 1; }
-
-  .is-dark & { filter: brightness(1); }
-
-  &.is-sliding {
-    transition:
-        opacity 500ms ease 400ms,
-        filter 700ms ease,
-        top 900ms cubic-bezier(.65,0,.35,1),
-        left 900ms cubic-bezier(.65,0,.35,1),
-        height 900ms cubic-bezier(.65,0,.35,1);
-  }
-
-  &.is-gone { opacity: 0; }
 }
 
 .v-loader__svg {
